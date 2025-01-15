@@ -6,7 +6,10 @@ from datetime import datetime, timedelta
 import locale
 
 # Установка русской локали для корректного отображения дат
-locale.setlocale(locale.LC_TIME, 'UTF-8')
+try:
+    locale.setlocale(locale.LC_TIME, 'UTF-8')
+except locale.Error:
+    locale.setlocale(locale.LC_TIME, 'Russian_Russia.1251')  # Для Windows
 
 # Определение дат заезда и выезда в нужном формате
 check_in_datetime = datetime.now() + timedelta(days=1)
