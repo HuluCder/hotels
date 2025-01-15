@@ -2,6 +2,33 @@ import rpa as r
 import pandas as pd
 import time
 import os
+from datetime import datetime, timedelta
+import locale
+
+# Установка русской локали для корректного отображения дат
+locale.setlocale(locale.LC_TIME, 'UTF-8')
+
+# Определение дат заезда и выезда в нужном формате
+check_in_datetime = datetime.now() + timedelta(days=1)
+check_out_datetime = check_in_datetime + timedelta(days=6)
+
+check_in_date = check_in_datetime.strftime('%d')
+check_out_date = check_out_datetime.strftime('%d')
+month_genitive_check_in = check_in_datetime.strftime('%B')
+month_genitive_check_out = check_out_datetime.strftime('%B')
+
+months_genitive = {
+    'январь': 'января', 'февраль': 'февраля', 'март': 'марта',
+    'апрель': 'апреля', 'май': 'мая', 'июнь': 'июня',
+    'июль': 'июля', 'август': 'августа', 'сентябрь': 'сентября',
+    'октябрь': 'октября', 'ноябрь': 'ноября', 'декабрь': 'декабря'
+}
+
+month_genitive_check_in = months_genitive.get(month_genitive_check_in.lower(), month_genitive_check_in)
+month_genitive_check_out = months_genitive.get(month_genitive_check_out.lower(), month_genitive_check_out)
+
+print("Дата заезда:", check_in_date, month_genitive_check_in)
+print("Дата выезда:", check_out_date, month_genitive_check_out)
 
 r.init(visual_automation=True, chrome_browser=True)
 
@@ -21,12 +48,26 @@ else:
     r.close()
     exit()
 
-#Выбор дат заезда и выезда
+# Выбор дат заезда и выезда
 if r.present('//input[@aria-label="Заезд"]'):
     r.click('//input[@aria-label="Заезд"]')
-    time.sleep(1)
-    r.click('//div[@aria-label="вторник, 14 января 2025 г."]')
-    r.click('//div[@aria-label="понедельник, 20 января 2025 г."]')
+    time.sleep(2)
+    
+    # Нажатие на элементы с числом и месяцем
+    if r.present(f'//div[contains(@aria-label, "{check_in_date} {month_genitive_check_in}")]'):
+        r.click(f'//div[contains(@aria-label, "{check_in_date} {month_genitive_check_in}")]')
+    else:
+        print(f"[-] Дата заезда не найдена: {check_in_date} {month_genitive_check_in}")
+        r.close()
+        exit()
+    
+    if r.present(f'//div[contains(@aria-label, "{check_out_date} {month_genitive_check_out}")]'):
+        r.click(f'//div[contains(@aria-label, "{check_out_date} {month_genitive_check_out}")]')
+    else:
+        print(f"[-] Дата выезда не найдена: {check_out_date} {month_genitive_check_out}")
+        r.close()
+        exit()
+
     r.click('//span[contains(text(), "Готово")]')
     time.sleep(5)
 else:
@@ -34,10 +75,10 @@ else:
     r.close()
     exit()
 
-#Сбор информации о первых 14 отелях
+# Сбор информации о первых 14 отелях
 hotel_data = []
 
-for i in range(1, 16):
+for i in range(1, 15):
     xpath_hotel = f'(//h2[@jscontroller="bqejFf" and @jsaction="YcW9n:dDUAne;"])[{i}]'
     if r.present(xpath_hotel):
         r.click(xpath_hotel)
@@ -67,14 +108,14 @@ for i in range(1, 16):
         print(f"[-] Отель №{i} не найден.")
         break
 
-#Сохранение данных в DataFrame
+# Сохранение данных в DataFrame
 df = pd.DataFrame(hotel_data)
 
-#Сохранение в Excel
+# Сохранение в Excel
 file_path = os.path.join(os.getcwd(), 'гостиницы.xlsx')
 df.to_excel(file_path, index=False)
 
 print(f"[+] Данные успешно сохранены в {file_path}")
 
-#Завершение работы
+# Завершение работы
 r.close()
