@@ -85,12 +85,15 @@ for i in range(1, 15):
     xpath_hotel = f'(//h2[@jscontroller="bqejFf" and @jsaction="YcW9n:dDUAne;"])[{i}]'
     if r.present(xpath_hotel):
         r.click(xpath_hotel)
-        time.sleep(5)
 
         hotel_name = r.read('//h1[@class="FNkAEc o4k8l"]')
         hotel_address = r.read('//div[@class="K4nuhf"]//span[@class="CFH2De"]')
-        hotel_price = r.read(f'(//h2[@jscontroller="bqejFf" and @jsaction="YcW9n:dDUAne;"])[{i}]//following::span[contains(@class, "qQOQpe") and contains(text(), "₸")][1]')
-        hotel_booking_link = r.url()
+        # Попытка взять цену из основного элемента, иначе из запасного
+        if r.present(f'(//button[contains(@class, "VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ nCP5yc AjY5Oe DuMIQc LQeN7 A9rngd VqBuDc wNqaKc idHpEf")]//span[@class="W9vOvb nDkDDb"])'):
+            hotel_price = r.read(f'(//button[contains(@class, "VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ nCP5yc AjY5Oe DuMIQc LQeN7 A9rngd VqBuDc wNqaKc idHpEf")]//span[@class="W9vOvb nDkDDb"])')
+        else:
+            hotel_price = r.read(f'(//button[contains(@class, "VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ nCP5yc AjY5Oe DuMIQc LQeN7 A9rngd VqBuDc wNqaKc idHpEf")]//span[@class="qQOQpe prxS3d"])')
+        hotel_booking_link = r.read('//a[contains(@class, "WpHeLc") and contains(@aria-label, "Посетить сайт партнера")]//@href')
 
         hotel_data.append({
             'Название': hotel_name,
@@ -102,7 +105,6 @@ for i in range(1, 15):
         # Нажатие на кнопку возврата к списку отелей
         if r.present('//span[@jsname="UDkh2"]'):
             r.click('//span[@jsname="UDkh2"]')
-            time.sleep(5)
         else:
             print("[-] Кнопка возврата не найдена.")
             r.close()
